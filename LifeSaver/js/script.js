@@ -6,7 +6,6 @@ $(document).ready(function () {
         }else{
             $('#start_button').removeAttr('disabled');
         }
-
     })
     $('#start_button').click(function(){
         setInterval(startTimer,1000);
@@ -22,9 +21,7 @@ $(document).ready(function () {
         player.y=0;
         // player.step=0;
         game();
-        console.log(game);
     })
-
 });
 
 let player={
@@ -35,20 +32,19 @@ let player={
     width:64,
     height:64
 };
+let score=0;
 
 function game() {
 
     $('.game_zone').append(`<div class="" id="player" style="top:${player.y}px;left:${player.x}px"></div>`);
     player.el=document.getElementById('player');
     generateLvl();
+    intervals();
     controller();
-    
 }
-
 function controller(e){
     $(document).keydown(function (e) { 
         switch (e.keyCode) {
-           
             case 87:
             if(player.y>16){
                 player.y-=player.step;
@@ -63,9 +59,7 @@ function controller(e){
                 if(player.y<gameZone.getBoundingClientRect().height-player.height*2.5){
                     player.y += player.step;
                     player.el.style.top = `${player.y}px`;
-                   
                 }
-               
                 break;
 
             //Влево
@@ -81,51 +75,128 @@ function controller(e){
                 if(player.x<gameZone.getBoundingClientRect().right-player.width){
                     player.x+=player.step;
                     player.el.style.left=`${player.x}px`
-                   
+
                 }
-                break;
-        
-            
+                break;   
         }
     });
 }
 function generateLvl() { 
     let xx=Math.round((gameZone.getBoundingClientRect().height-player.height)/64);
     let yy=Math.round((gameZone.getBoundingClientRect().width-player.height)/64)+1;
-    // console.log(Math.round((xx*yy)/(64*64)));
-    var stone=0;
-    var heart=1;
-    var lvl=[];
-    for (let index = 0; index <xx*yy; index++) {
-    var run=Math.floor(Math.random()*70+1);
-    lvl.push(run);
-        if(run<=1){
-            $('.game_zone').append(`<img src="img/ground.png" class="field" alt="">`);
-        }
-        else if(run==2){
-            if(heart<=10){
-                $('.game_zone').append(`<img src="img/heart-in-stone.svg" class="heart" alt="">`);
-                heart++;
-            }else{
-                $('.game_zone').append(`<img src="img/ground.png" class="field" alt="">`);
-            }
-            
-        }
-        else if(run==3){
-            if(stone<=30){
-                $('.game_zone').append(`<img src="img/stone.png" class="stone" alt="">`);
-                stone++;
-            }else{
-                $('.game_zone').append(`<img src="img/ground.png" class="field" alt="">`);
-            }
-        }else{
-            $('.game_zone').append(`<img src="img/ground.png" class="field" alt="">`); 
-        }
-        
+    var lvl=generateField(xx,yy)
+    setHeart(lvl);
+    setStone(lvl);
+    setLvl(lvl);
+    for (let index = 0; index < lvl.length; index++) {
        
     }
 }
 
+function generateField(cols,rows){
+    var lvl=[];
+    let id=0;
+    for (let index = 0; index <cols*rows; index++) {
+        lvl.push([{
+            id_field:id++,
+            type:'field'
+        }])
+    }
+    return lvl;
+}
+function setHeart(lvl){
+    for (let i = 0; i < 10; i++) {
+        var ran=Math.floor(Math.random()*lvl.length+1)-1;
+        if(lvl[ran][0].type=='field'){
+            lvl[ran][0].type='heart';
+        }else{
+            i--;
+        }
+    }
+}
+function setStone(lvl){
+    for (let i = 0; i < 50; i++) {
+        var ran=Math.floor(Math.random()*lvl.length+1)-1;
+        if(lvl[ran][0].type=='field'){
+            lvl[ran][0].type='stone';
+        }else{
+            i--;
+        }
+    }
+}
+function setLvl(lvl) {
+    for (let index = 0; index <lvl.length; index++) {
+        if(lvl[index][0].type=='field'){
+            $('.game_zone').append(`<img src="img/ground.png" class="field" alt="">`);
+        }
+        else if(lvl[index][0].type=='heart'){
+            $('.game_zone').append(`<img src="img/heart-in-stone.svg" class="heart" alt="">`);
+        }
+        else if(lvl[index][0].type=='stone'){
+            $('.game_zone').append(`<img src="img/stone.png" class="stone" alt="">`);  
+        }
+    }
+}
+function intervals() {
+    let block=setInterval(()=>{
+        let hearts=document.querySelectorAll('.heart');
+        hearts.forEach((heart)=>{
+            const playerPosTop = player.el.getBoundingClientRect().top,
+                playerPosRight = player.el.getBoundingClientRect().right,
+                playerPosBottom = player.el.getBoundingClientRect().bottom,
+                playerPosLeft = player.el.getBoundingClientRect().left,
+                heartPosTop = heart.getBoundingClientRect().top,
+                heartPosRight = heart.getBoundingClientRect().right,
+                heartPosBottom = heart.getBoundingClientRect().bottom,
+                heartPosLeft = heart.getBoundingClientRect().left;
+                
+            if (
+                playerPosTop < heartPosBottom &&
+                playerPosBottom > heartPosTop &&
+                playerPosRight > heartPosLeft &&
+                playerPosLeft < heartPosRight
+            ) {
+                heart.src='img/ground.png';
+                heart.classList.remove('heart');
+                score++;
+            }
+
+        })
+        // let stones=document.querySelectorAll('.stone');
+        // stones.forEach((stone)=>{
+        //     const playerPosTop = player.el.getBoundingClientRect().top,
+        //         playerPosRight = player.el.getBoundingClientRect().right,
+        //         playerPosBottom = player.el.getBoundingClientRect().bottom,
+        //         playerPosLeft = player.el.getBoundingClientRect().left,
+        //         stonePosTop = stone.getBoundingClientRect().top,
+        //         stonePosRight = stone.getBoundingClientRect().right,
+        //         stonePosBottom = stone.getBoundingClientRect().bottom,
+        //         stonePosLeft = stone.getBoundingClientRect().left;
+                
+        //     if (
+        //         playerPosTop < stonePosBottom &&
+        //         playerPosBottom > stonePosTop &&
+        //         playerPosRight > stonePosLeft &&
+        //         playerPosLeft < stonePosRight
+        //     ) {
+        //         player.x-=player.step;
+        //         player.y-=player.step;
+        //         player.el.style.top=`${player.y}px`
+        //         player.el.style.left=`${player.x}px`
+        //     }
+
+        // })
+
+        $('#score_heart').html(score+"/10")
+    },1000/60)
+    let endgame=setInterval(()=>{
+        if(score==10){
+            alert('Ты выиграл');
+            location.reload();
+            score=0;
+        }
+    },1000/60)
+}
 
 
 let second=00,
